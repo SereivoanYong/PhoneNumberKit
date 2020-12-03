@@ -13,7 +13,7 @@ public class CountryCodePickerViewController: UITableViewController {
 
     lazy var searchController = UISearchController(searchResultsController: nil)
 
-    public let phoneNumberKit: PhoneNumberKit
+    public let util: PhoneNumberUtil
 
     let commonCountryCodes: [String]
 
@@ -22,9 +22,9 @@ public class CountryCodePickerViewController: UITableViewController {
     var hasCurrent = true
     var hasCommon = true
 
-    lazy var allRegionCodes = phoneNumberKit
+    lazy var allRegionCodes = util
         .allRegionCodes()
-        .compactMap({ Country(for: $0, with: self.phoneNumberKit) })
+        .compactMap({ Country(for: $0, with: self.util) })
         .sorted(by: { $0.name.caseInsensitiveCompare($1.name) == .orderedAscending })
 
     lazy var regionCodes: [[Country]] = {
@@ -43,11 +43,11 @@ public class CountryCodePickerViewController: UITableViewController {
                 return collection
             }
 
-        let popular = commonCountryCodes.compactMap({ Country(for: $0, with: phoneNumberKit) })
+        let popular = commonCountryCodes.compactMap({ Country(for: $0, with: util) })
 
         var result: [[Country]] = []
         // Note we should maybe use the user's current carrier's country code?
-        if hasCurrent, let current = Country(for: PhoneNumberKit.defaultRegionCode(), with: phoneNumberKit) {
+        if hasCurrent, let current = Country(for: PhoneNumberUtil.defaultRegionCode(), with: util) {
             result.append([current])
         }
         hasCommon = hasCommon && !popular.isEmpty
@@ -70,18 +70,18 @@ public class CountryCodePickerViewController: UITableViewController {
      - parameter commonCountryCodes: An array of country codes to display in the section below the current region section. defaults to `PhoneNumberKit.CountryCodePicker.commonCountryCodes`
      */
     public init(
-        phoneNumberKit: PhoneNumberKit,
-        commonCountryCodes: [String] = PhoneNumberKit.CountryCodePicker.commonCountryCodes)
+        util: PhoneNumberUtil,
+        commonCountryCodes: [String] = PhoneNumberUtil.CountryCodePicker.commonCountryCodes)
     {
-        self.phoneNumberKit = phoneNumberKit
+        self.util = util
         self.commonCountryCodes = commonCountryCodes
         super.init(style: .grouped)
         self.commonInit()
     }
 
     required init?(coder: NSCoder) {
-        self.phoneNumberKit = PhoneNumberKit()
-        self.commonCountryCodes = PhoneNumberKit.CountryCodePicker.commonCountryCodes
+        self.util = PhoneNumberUtil()
+        self.commonCountryCodes = PhoneNumberUtil.CountryCodePicker.commonCountryCodes
         super.init(coder: coder)
         self.commonInit()
     }
@@ -214,11 +214,11 @@ public extension CountryCodePickerViewController {
         public var name: String
         public var prefix: String
 
-        public init?(for countryCode: String, with phoneNumberKit: PhoneNumberKit) {
+        public init?(for countryCode: String, with util: PhoneNumberUtil) {
             let flagBase = UnicodeScalar("🇦").value - UnicodeScalar("A").value
             guard
                 let name = (Locale.current as NSLocale).localizedString(forCountryCode: countryCode),
-                let prefix = phoneNumberKit.countryCode(forRegionCode: countryCode)?.description
+                let prefix = util.countryCode(forRegionCode: countryCode)?.description
             else {
                 return nil
             }
